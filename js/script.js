@@ -47,23 +47,44 @@ const state = {
   operator: null,
 };
 
+const MAX_INPUT_DIGITS = 12;
+const MAX_DISPLAY_CHARS = 12;
+
 const handlers = {
   digit: (config) => {
     createNumber(config.value);
-    render();
-  }
-}
+  },
+};
 
 const display = document.querySelector(".calculator__display");
 const buttons = document.querySelector(".calculator__buttons");
 
 function render() {
-  display.textContent = state.current;
+  display.textContent = formatDisplayValue(state.current);
 }
 render();
 
 function createNumber(digit) {
+  if (state.current.toString().length >= MAX_INPUT_DIGITS) {
+    return;
+  }
   state.current = state.current * 10 + digit;
+}
+
+function formatDisplayValue(value) {
+  const displayValue = value.toString();
+
+  if (displayValue.length <= MAX_DISPLAY_CHARS) {
+    return displayValue;
+  }
+  for (let digits = MAX_DISPLAY_CHARS; digits >= 0; digits--) {
+    const exponentialValue = value.toExponential(digits);
+
+    if (exponentialValue.length <= MAX_DISPLAY_CHARS) {
+      return exponentialValue;
+    }
+  }
+  return value.toExponential(0);
 }
 
 buttons.addEventListener("click", (event) => {
@@ -75,6 +96,5 @@ buttons.addEventListener("click", (event) => {
   if (!config) return;
 
   handlers[config.type]?.(config);
-
-  console.log(state);
+  render();
 });
