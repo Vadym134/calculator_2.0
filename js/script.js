@@ -42,18 +42,18 @@ const buttonsConfig = {
 // Переменные
 
 const handleCommand = {
-  "C": () => { ... },
-  "⌫": () => { ... },
-  ".": () => { ... },
-  "=": () => { ... },
+  "C": () => { },
+  "⌫": () => { },
+  ".": () => { },
+  "=": () => { },
 };
 
 const handleOperator = {
-  "+": () => { ... },
-  "−": () => { ... },
-  "×": () => { ... },
-  "÷": () => { ... },
-  "%": () => { ... },
+  "+": () => { add(); },
+  "−": () => {},
+  "×": () => { },
+  "÷": () => { },
+  "%": () => { },
 };
 
 const handlers = {
@@ -84,8 +84,24 @@ const buttons = document.querySelector(".calculator__buttons");
 
 // Функции
 
+function add() {
+  if (state.previous !== null && state.operator !== null) {
+    return;
+  }
+  state.previous = state.current;
+  state.operator = "+";
+  state.current = 0;
+  state.expression = `${state.previous} ${state.operator}`;
+  
+  render();
+};
+
 function createNumber(digit) {
   state.current = state.current * 10 + digit;
+
+  if (state.previous !== null && state.operator !== null) {
+    state.expression = `${state.previous} ${state.operator} ${state.current}`;
+  }
 
   render();
 };
@@ -109,7 +125,7 @@ const exponentDigits = Math.floor(Math.log10(exponent)) + 1;
 const decimalPlaces = maxLength - exponentDigits - 3;
 
 return num.toExponential(Math.max(0, decimalPlaces));
-}
+};
 
 function render() {
   if (!display) return;
@@ -119,7 +135,7 @@ function render() {
   } else {
     display.textContent = formatNumber(state.current);
   }
-}
+};
 
 render();
 // Обработчик событий 
