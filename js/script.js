@@ -34,13 +34,39 @@ const buttonsConfig = {
 
   "btn-1": { type: "command", value: "C" },
 
+  "btn-18": { type: "command", value: "." },
+
+  "btn-19": { type: "command", value: "=" },
 };
 
 // Переменные
 
+const handleCommand = {
+  "C": () => { ... },
+  "⌫": () => { ... },
+  ".": () => { ... },
+  "=": () => { ... },
+};
+
+const handleOperator = {
+  "+": () => { ... },
+  "−": () => { ... },
+  "×": () => { ... },
+  "÷": () => { ... },
+  "%": () => { ... },
+};
+
 const handlers = {
   digit: (config) => {
     createNumber(config.value);
+  },
+
+  operator: (config) => {
+    handleOperator[config.value]?.();
+  },
+
+  command: (config) => {
+    handleCommand[config.value]?.();
   },
 };
 
@@ -48,6 +74,7 @@ const state = {
   current: 0,
   previous: null,
   operator: null,
+  expression: null,
 };
 
 const MAX_DISPLAY_CHARS = 12;
@@ -57,13 +84,10 @@ const buttons = document.querySelector(".calculator__buttons");
 
 // Функции
 
-function render() {
-  display.textContent = formatNumber(state.current);
-}
-render();
-
 function createNumber(digit) {
   state.current = state.current * 10 + digit;
+
+  render();
 };
 
 function formatNumber(num, maxLength = MAX_DISPLAY_CHARS) {
@@ -87,6 +111,17 @@ const decimalPlaces = maxLength - exponentDigits - 3;
 return num.toExponential(Math.max(0, decimalPlaces));
 }
 
+function render() {
+  if (!display) return;
+
+  if (state.expression) {
+    display.textContent = state.expression;
+  } else {
+    display.textContent = formatNumber(state.current);
+  }
+}
+
+render();
 // Обработчик событий 
 
 buttons.addEventListener("click", (event) => {
@@ -97,6 +132,5 @@ buttons.addEventListener("click", (event) => {
   const config = buttonsConfig[dataId];
   if (!config) return;
 
-  handlers[config.type]?.(config);
-  render();
+  handlers?.[config.type]?.(config);
 });
