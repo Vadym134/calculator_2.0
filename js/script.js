@@ -48,13 +48,6 @@ const handleCommand = {
   "=": () => { },
 };
 
-const handleOperator = {
-  "+": () => { add(); },
-  "−": () => {},
-  "×": () => { },
-  "÷": () => { },
-  "%": () => { },
-};
 
 const handlers = {
   digit: (config) => {
@@ -62,7 +55,7 @@ const handlers = {
   },
 
   operator: (config) => {
-    handleOperator[config.value]?.();
+    handleOperator(config.value);
   },
 
   command: (config) => {
@@ -84,25 +77,19 @@ const buttons = document.querySelector(".calculator__buttons");
 
 // Функции
 
-function add() {
-  if (state.previous !== null && state.operator !== null) {
-    return;
-  }
+function handleOperator(operator) {
+  if (state.current === 0 && state.expression) return;
+
   state.previous = state.current;
-  state.operator = "+";
+  state.operator = operator;
   state.current = 0;
-  state.expression = `${state.previous} ${state.operator}`;
-  
+  state.expression = `${formatNumber(state.previous, MAX_DISPLAY_CHARS - 2)} ${state.operator}`;
+
   render();
 };
 
 function createNumber(digit) {
   state.current = state.current * 10 + digit;
-
-  if (state.previous !== null && state.operator !== null) {
-    state.expression = `${state.previous} ${state.operator} ${state.current}`;
-  }
-
   render();
 };
 
@@ -149,4 +136,5 @@ buttons.addEventListener("click", (event) => {
   if (!config) return;
 
   handlers?.[config.type]?.(config);
+  console.log(state);
 });
