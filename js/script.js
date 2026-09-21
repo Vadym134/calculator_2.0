@@ -30,11 +30,11 @@ const buttonsConfig = {
 
   "btn-3": { type: "operator", value: "%" },
 
-  "btn-2": { type: "command", value: "⌫" },
+  "btn-2": { type: "command", value: "back" },
 
-  "btn-1": { type: "command", value: "C" },
+  "btn-1": { type: "command", value: "clear" },
 
-  "btn-18": { type: "command", value: "." },
+  "btn-18": { type: "command", value: "decimal" },
 
   "btn-19": { type: "command", value: "=" },
 };
@@ -42,9 +42,9 @@ const buttonsConfig = {
 // Переменные
 
 const handleCommand = {
-  "C": () => { clear(); },
-  "⌫": () => { },
-  ".": () => { },
+  "clear": () => { clear(); },
+  "back": () => { },
+  "decimal": () => { decimal(); },
   "=": () => { },
 };
 
@@ -68,6 +68,7 @@ const state = {
   previous: null,
   operator: null,
   expression: null,
+  decimalPlaces: null,
 };
 
 const MAX_DISPLAY_CHARS = 14;
@@ -75,17 +76,29 @@ const MAX_DISPLAY_CHARS = 14;
 const display = document.querySelector(".calculator__display");
 const buttons = document.querySelector(".calculator__buttons");
 
-// Функции
+// ФУНКЦИИ
+
+// функции handleCommand
+
+function decimal() {
+  if (state.decimalPlaces === null) {
+    state.decimalPlaces = 1;
+  }
+
+  render();
+}
 
 function clear() {
   state.current = 0;
   state.previous = null;
   state.operator = null;
   state.expression = null;
-  state.isNewOperand = true;
+  state.decimalPlaces = null;
 
   render();
 }
+
+// Функция добавления операторов
 
 function handleOperator(operator) {
   if (state.current === 0 && state.expression) return;
@@ -93,21 +106,30 @@ function handleOperator(operator) {
   state.previous = state.current;
   state.operator = operator;
   state.current = 0;
-  state.isNewOperand = true;
+  state.decimalPlaces = null;
 
   state.expression = `${formatNumber(state.previous, MAX_DISPLAY_CHARS - 2)} ${state.operator}`;
 
   render();
 }
 
+// Функции добавления цифр
+
 function handleDigit(digit) {
-  state.isNewOperand = false;
-  state.current = createNumber(state.current, digit);
+  state.current = createNumber(state.current, digit, state.decimalPlaces);
+
+  if (state.decimalPlaces !== null) {
+    state.decimalPlaces++;
+  };
   
   render();
 };
 
-function createNumber(current, digit) {
+function createNumber(current, digit, decimalPlaces) {
+  if (decimalPlaces !== null) {
+    return current + digit / (10 ** decimalPlaces);
+  }
+
   return current * 10 + digit;
 };
 
@@ -138,10 +160,13 @@ function render() {
   if (state.expression) {
     display.textContent = state.expression;
   } else {
-    display.textContent = formatNumber(state.current);
+   const formattedValue = formatNumber(state.current);
+
+    display.textContent = state.decimalPlaces === 1 
+      ? `${formattedValue}.` 
+      : formattedValue;
   }
 };
-
 render();
 
 // Обработчик событий 
