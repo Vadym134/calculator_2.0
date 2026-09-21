@@ -68,11 +68,9 @@ const state = {
   previous: null,
   operator: null,
   expression: null,
-  isNewOperand: true, 
 };
 
-const MAX_DISPLAY_CHARS = 12;
-const OPERATOR_PERT_LENGTH = 3;
+const MAX_DISPLAY_CHARS = 14;
 
 const display = document.querySelector(".calculator__display");
 const buttons = document.querySelector(".calculator__buttons");
@@ -90,16 +88,14 @@ function clear() {
 }
 
 function handleOperator(operator) {
-  if (state.operator && state.isNewOperand) {
-    state.operator = operator;
-  } else {
-    state.previous = state.current;
-    state.operator = operator;
-    state.current = 0;
-    state.isNewOperand = true;
-  }
+  if (state.current === 0 && state.expression) return;
 
-  state.expression = buildExpression();
+  state.previous = state.current;
+  state.operator = operator;
+  state.current = 0;
+  state.isNewOperand = true;
+
+  state.expression = `${formatNumber(state.previous, MAX_DISPLAY_CHARS - 2)} ${state.operator}`;
 
   render();
 }
@@ -107,82 +103,34 @@ function handleOperator(operator) {
 function handleDigit(digit) {
   state.isNewOperand = false;
   state.current = createNumber(state.current, digit);
-
-  if (state.operator) {
-    state.expression = buildExpression();
-  }
   
   render();
 };
-
-function buildExpression() {
-  if (!state.operator) return null;
-
-  const remaining = MAX_DISPLAY_CHARS - OPERATOR_PERT_LENGTH;
-  const previousBudget = Math.floor(remaining / 2);
-  const currentBudget = remaining - previousBudget;
-
-  const previousStr = formatNumber(state.previous, previousBudget);
-  
-  if (state.isNewOperand) {
-    return `${previousStr} ${state.operator}`;
-  }
-
-  const currentStr = formatNumber(state.current, currentBudget);    
-
-  return `${previousStr} ${state.operator} ${currentStr}`;
-}
 
 function createNumber(current, digit) {
   return current * 10 + digit;
 };
 
 function formatNumber(num, maxLength = MAX_DISPLAY_CHARS) {
-  if (!Number.isFinite(num)) {
-    return "Error";
-  }
+if (!Number.isFinite(num)) {
+return "Error";
+};
 
-  const isNegative = num < 0;
-  const signLength = isNegative ? 1 : 0;
-  const absNum = Math.abs(num);
+const digits = num === 0
+? 1
+: Math.floor(Math.log10(Math.abs(num))) + 1;
 
-  // Проблема 3: защита от погрешности плавающей точки в log10
-  const EPSILON = 1e-10;
-
-  // Проблема 2: считаем целую и дробную длину раздельно
-  const integerDigits = absNum === 0
-    ? 1
-    : absNum >= 1
-      ? Math.floor(Math.log10(absNum) + EPSILON) + 1
-      : 1; // для чисел < 1 целая часть — это просто "0"
-
-  const totalIntegerLength = integerDigits + signLength;
-
-  // Число целиком влезает — форматируем как обычную десятичную дробь
-  if (totalIntegerLength < maxLength) {
-    const isInteger = Number.isInteger(num);
-    if (isInteger) return num.toFixed(0);
-
-    const availableDecimals = Math.max(0, maxLength - totalIntegerLength - 1); // -1 под точку
-    return num.toFixed(availableDecimals);
-  }
-
-  // Не влезает даже целая часть — переходим на экспоненциальную форму
-  const exponent = absNum >= 1
-    ? integerDigits - 1
-    : -Math.floor(Math.log10(absNum) + EPSILON); // Проблема 2: степень для дробей < 1
-
-  const exponentDigits = Math.floor(Math.log10(Math.max(1, Math.abs(exponent))) + EPSILON) + 1;
-
-  // "e", возможный "-" у степени, "+" не считаем (JS сам не пишет "+" в некоторых случаях, но toExponential пишет)
-  const exponentSignLength = 1; // под "+" или "-" перед степенью
-  const overhead = 2 + exponentSignLength + exponentDigits + signLength; // 2 = "e" + точка мантиссы
-
-  // Проблема 4: не даём decimalPlaces уйти в минус
-  const decimalPlaces = Math.max(0, maxLength - overhead);
-
-  return num.toExponential(decimalPlaces);
+if (digits <= maxLength) {
+return num;
 }
+
+const exponent = digits - 1;
+const exponentDigits = Math.floor(Math.log10(exponent)) + 1;
+
+const decimalPlaces = maxLength - exponentDigits - 3;
+
+return num.toExponential(Math.max(0, decimalPlaces));
+};
 
 function render() {
   if (!display) return;
@@ -209,27 +157,3 @@ buttons.addEventListener("click", (event) => {
   handlers?.[config.type]?.(config);
   console.log(state);
 });
-
-
-/* 
-function formatNumber(num, maxLength = MAX_DISPLAY_CHARS) {
-if (!Number.isFinite(num)) {
-return "Error";
-};
-
-const digits = num === 0
-? 1
-: Math.floor(Math.log10(Math.abs(num))) + 1;
-
-if (digits <= maxLength) {
-return num;
-}
-
-const exponent = digits - 1;
-const exponentDigits = Math.floor(Math.log10(exponent)) + 1;
-
-const decimalPlaces = maxLength - exponentDigits - 3;
-
-return num.toExponential(Math.max(0, decimalPlaces));
-};
-*/
