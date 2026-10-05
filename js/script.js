@@ -170,11 +170,7 @@ function createNumber(current, digit, decimalPlaces) {
    return Number(result.toFixed(decimalPlaces));
   }
 
-  if (current < 0) {
-  return current * 10 - digit;
-  }
-
-  return current * 10 + digit;
+  return current < 0 ? current * 10 - digit : current * 10 + digit;
 };
 
 function formatNumber(num, maxLength = MAX_DISPLAY_CHARS) {
@@ -244,7 +240,7 @@ function render() {
       : formattedValue;
   }
 };
-render(); 
+render();
 
 // Обработчик событий 
 
